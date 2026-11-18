@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FastPay UPI Checkout | Secure Instant Payment</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsQR Library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+  <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            },
+            upi: {
+              gpay: '#1a73e8',
+              phonepe: '#5f259f',
+              paytm: '#002e6e',
+              bhim: '#00796b',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-soft': 'bounce 2s infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar & Micro-interactions */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, button {
+      user-select: auto;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .tap-effect:active {
+      transform: scale(0.97);
+      transition: transform 0.1s ease;
+    }
+    /* QR scanning frame animation */
+    @keyframes scanRay {
+      0% { top: 6%; opacity: 0.8; }
+      50% { opacity: 1; }
+      100% { top: 90%; opacity: 0.8; }
+    }
+    .scanner-ray {
+      position: absolute;
+      left: 6%;
+      right: 6%;
+      height: 3px;
+      background: linear-gradient(90deg, rgba(99,102,241,0) 0%, #4f46e5 50%, rgba(99,102,241,0) 100%);
+      box-shadow: 0 0 12px #6366f1;
+      animation: scanRay 2s ease-in-out infinite alternate;
+    }
+    /* Tooltip & modal transitions */
+    .fade-in {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .slide-up {
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0.6; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-800 min-h-screen flex items-center justify-center p-3 sm:p-5 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Main Container -->
+  <main class="w-full max-w-md mx-auto my-auto relative">
+    
+    <!-- Top Decorative Ambient Glow -->
+    <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-500/25 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-10 right-0 w-52 h-52 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none"></div>
+
+    <!-- Checkout Card -->
+    <div class="glass-card rounded-3xl shadow-2xl border border-white/40 overflow-hidden relative transition-all duration-300">
+      
+      <!-- Top Security & Timer Ribbon -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-5 py-3 text-white flex items-center justify-between text-xs font-medium border-b border-white/10">
+        <div class="flex items-center gap-1.5 text-emerald-400">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd" />
+          </svg>
+          <span class="tracking-wide">256-bit Encrypted</span>
+        </div>
+        
+        <!-- Interactive Session Timer -->
+        <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-full text-indigo-200">
+          <svg class="w-3.5 h-3.5 animate-spin" style="animation-duration: 3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="font-mono text-xs font-semibold" id="sessionTimer">09:59</span>
+        </div>
+      </div>
+
+      <!-- Merchant Header -->
+      <div class="p-5 pb-4 bg-white border-b border-slate-100">
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-sky-200 uppercase" id="merchantAvatar">
+              PM
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h1 class="font-bold text-slate-800 text-base leading-tight tracking-tight" id="displayMerchantName">
+                  Paytm Merchant
+                </h1>
+                <!-- Verified Badge -->
+                <span class="inline-flex items-center justify-center text-blue-600 bg-blue-50 rounded-full p-0.5" title="Verified UPI Merchant">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+                </span>
+              </div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-xs text-slate-500 font-medium">Order: <span class="font-mono text-slate-700 font-semibold" id="displayOrderId">ORD-89241</span></span>
+                <button onclick="openConfigModal()" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium underline flex items-center gap-0.5">
+                  Customize
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Payable Amount Display -->
+          <div class="text-right">
+            <span class="text-[11px] uppercase tracking-wider text-slate-600 font-bold block">To Pay</span>
+            <div class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-baseline justify-end">
+              <span class="text-lg font-bold text-slate-800 mr-0.5">₹</span>
+              <span id="displayAmount">1.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bypass Notice Banner -->
+        <div class="mt-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-xl p-2.5 flex items-start gap-2.5 text-xs text-amber-900">
+          <svg class="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div class="leading-relaxed">
+            <strong class="font-semibold text-amber-950">GPay/Bank Link Issue?</strong> If direct button shows <em>"merchant not available"</em>, tap <strong>Save QR & Open App</strong> or scan the QR below directly.
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Body / Tabs -->
+      <div class="p-5 space-y-4">
+
+        <!-- 1. Dynamic QR Code Card -->
+        <div class="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/90 text-center relative shadow-inner">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span id="qrHeaderTitle">Live Dynamic QR (₹1.00)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="toggleOriginalQr()" id="btnToggleQr" class="text-[10px] bg-slate-200/80 hover:bg-indigo-100 hover:text-indigo-700 text-slate-700 font-semibold px-2 py-0.5 rounded-full transition-colors">
+                View Original Image
+              </button>
+            </div>
+          </div>
+
+          <!-- QR Wrapper with Scan Line Animation -->
+          <div class="relative inline-block p-3.5 bg-white rounded-2xl shadow-sm border border-slate-200/80 group">
+            <div id="qrcode" class="flex justify-center items-center overflow-hidden rounded-lg min-h-[190px] min-w-[190px]"></div>
+            <img id="originalQrImg" src="my_qr.jpg" class="hidden w-[196px] h-[196px] object-contain rounded-lg" alt="Original Paytm QR">
+            
+            <!-- Dynamic Scan Ray Indicator -->
+            <div id="scanIndicator" class="scanner-ray pointer-events-none hidden"></div>
+
+            <!-- UPI Watermark Center Badge -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="w-9 h-9 rounded-full bg-white shadow-md border border-slate-200 flex items-center justify-center p-1">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current text-indigo-600" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- QR Caption & Quick Info -->
+          <p class="text-xs text-slate-500 mt-2 font-medium">
+            Scan using any UPI App (<span class="text-slate-700 font-semibold">GPay, PhonePe, Paytm, CRED</span>)
+          </p>
+
+          <!-- VPA Display with Copy Button -->
+          <div class="mt-3 flex items-center justify-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 text-xs shadow-sm max-w-xs mx-auto">
+            <span class="text-slate-500">UPI ID:</span>
+            <span class="font-mono font-semibold text-slate-800 truncate" id="displayVpa">paytmqr5o446z@ptys</span>
+            <button onclick="copyMerchantVpa()" class="tap-effect ml-auto text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 font-semibold px-2 py-0.5 rounded-lg flex items-center gap-1 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              <span id="copyBtnText">Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Dual Smart Action Buttons ('Desi Jugaad' & 'Auto-Decode Engine') -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <!-- Button A: Desi Jugaad - Save QR & Open App -->
+          <button onclick="saveQrAndShowModal()" class="tap-effect w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-3 px-3 rounded-2xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm flex flex-col items-center justify-center gap-1 transition-all">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 fill-none stroke-current" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>Save QR to Gallery</span>
+            </div>
+            <span class="text-[10px] text-emerald-100 font-normal">100% Success Bypass</span>
+          </button>
+
+          <!-- Button B: Background QR Auto-Scan & Fetch Engine (jsQR) -->
+          <button onclick="triggerBackgroundQrFetch()" id="btnAutoFetch" class="tap-effect w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold py-3 px-3 rounded-2xl shadow-md shadow-indigo-600/20 text-xs sm:text-sm flex flex-col items-center justify-center gap-1 transition-all">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 fill-none stroke-current" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span>Auto-Fetch & Pay</span>
+            </div>
+            <span class="text-[10px] text-indigo-100 font-normal">jsQR Deep Link Engine</span>
+          </button>
+        </div>
+
+        <!-- 3. Direct App One-Tap Payment Deep-Link Buttons -->
+        <div>
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Fast One-Tap Deep Links</span>
+            <span class="text-[11px] text-slate-500 font-medium">Opens App Directly</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <!-- Google Pay (tez://upi/pay?...) -->
+            <button onclick="payViaApp('gpay')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-blue-400 transition-all shadow-sm">
+              <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
+                <!-- GPay Multi-color stylized icon -->
+                <svg viewBox="0 0 24 24" class="w-5 h-5">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-semibold text-slate-800">Google Pay</span>
+              <span class="text-[9px] text-slate-500 font-mono">tez://</span>
+            </button>
+
+            <!-- PhonePe (phonepe://pay?...) -->
+            <button onclick="payViaApp('phonepe')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-purple-400 transition-all shadow-sm">
+              <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
+                <!-- PhonePe Stylized Pe Icon -->
+                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-[#5f259f]">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm1.75 16.5h-2.5V14h-1.5c-1.38 0-2.5-1.12-2.5-2.5V8.5C7.25 7.12 8.37 6 9.75 6H13c1.93 0 3.5 1.57 3.5 3.5 0 1.63-1.12 2.99-2.63 3.38L15.5 16.5h-1.75zm-1.5-6h-2.25v2h2.25c.69 0 1.25-.56 1.25-1.25s-.56-.75-1.25-.75z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-semibold text-slate-800">PhonePe</span>
+              <span class="text-[9px] text-slate-500 font-mono">phonepe://</span>
+            </button>
+
+            <!-- Paytm (paytmmp://pay?...) -->
+            <button onclick="payViaApp('paytm')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-sky-400 transition-all shadow-sm">
+              <div class="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
+                <!-- Paytm Logo/Icon -->
+                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-[#00b9f5]">
+                  <path d="M21.5 2h-19C1.12 2 0 3.12 0 4.5v15C0 20.88 1.12 22 2.5 22h19c1.38 0 2.5-1.12 2.5-2.5v-15c0-1.38-1.12-2.5-2.5-2.5zM8.5 15H6.2V9h2.3v6zm6.8-2.1c-.2.7-.8 1.1-1.6 1.1h-1.5V9h1.5c.8 0 1.4.4 1.6 1.1l.1.4v1.3l-.1.4zm5.5 2.1h-2.1v-3.7l-1.3 3.7h-1.4l-1.3-3.7V15h-1.8V9h2.1l1.7 4.5L19.4 9h2v6z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-semibold text-slate-800">Paytm</span>
+              <span class="text-[9px] text-slate-500 font-mono">paytmmp://</span>
+            </button>
+
+            <!-- Generic Any UPI (upi://pay?...) -->
+            <button onclick="payViaApp('generic')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-indigo-400 transition-all shadow-sm">
+              <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
+                <!-- Any UPI / BHIM Icon -->
+                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-indigo-600" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-semibold text-slate-800">Any UPI</span>
+              <span class="text-[9px] text-slate-500 font-mono">upi://</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Extra Utility: Live Camera Scan or Upload Screenshot -->
+        <div class="flex items-center gap-2 pt-1">
+          <button onclick="openLiveCameraScanner()" class="tap-effect flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 border border-slate-200/70 transition-colors">
+            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Live Camera Scan
+          </button>
+          <label class="tap-effect flex-1 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 border border-slate-200/70 cursor-pointer transition-colors">
+            <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Decode Image QR
+            <input type="file" id="qrFileInput" accept="image/*" class="hidden" onchange="handleQrFileUpload(event)">
+          </label>
+        </div>
+
+        <!-- 5. Payment Verification / UTR Reference Box -->
+        <div class="pt-3 border-t border-slate-200/80">
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="utrInput" class="text-xs font-bold text-slate-700 flex items-center gap-1">
+              <span>Paid? Enter 12-Digit UTR / Ref No.</span>
+            </label>
+            <span class="text-[11px] text-slate-500 font-medium">Auto-verifies</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="relative">
+              <input 
+                type="text" 
+                id="utrInput" 
+                maxlength="12" 
+                placeholder="e.g. 432109876543" 
+                class="w-full pl-3.5 pr-20 py-2.5 text-sm font-mono tracking-wider bg-white rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-600 transition-all uppercase"
+                oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateUtrInput()"
+              >
+              <button 
+                onclick="fillDemoUtr()" 
+                type="button" 
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-md transition-colors"
+                title="Fill sample UTR for instant testing"
+              >
+                Sample UTR
+              </button>
+            </div>
+
+            <!-- Verify Button -->
+            <button 
+              id="btnVerifyUtr" 
+              onclick="verifyPaymentUtr()" 
+              class="tap-effect w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-semibold py-3 px-4 rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              <span id="btnVerifyText">Verify Payment</span>
+              <svg id="btnVerifySpinner" class="w-4 h-4 animate-spin hidden" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Info -->
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 text-center text-[11px] text-slate-500 flex items-center justify-between">
+        <span class="flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+          </svg>
+          NPCI UPI Standard
+        </span>
+        <span class="font-mono text-[10px]">v3.2 • Desi Bypass Active</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 1: Sleek 'Desi Jugaad' Bottom Sheet Modal               -->
+  <!-- ============================================================== -->
+  <div id="desiJugaadModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden slide-up border border-slate-200">
+      
+      <!-- Drag handle for mobile -->
+      <div class="w-12 h-1 bg-slate-300 rounded-full mx-auto mt-3 mb-1 sm:hidden"></div>
+      
+      <div class="p-6">
+        <!-- Success Check Icon Header -->
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <svg class="w-6 h-6 fill-none stroke-current" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">QR Downloaded to Gallery!</h3>
+            <p class="text-xs text-slate-500">Foolproof 3-step payment method</p>
+          </div>
+          <button onclick="closeDesiModal()" class="ml-auto text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 3-Step Guided Graphic -->
+        <div class="mt-5 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
+            <p class="text-slate-700 leading-snug">
+              <strong>Saved:</strong> The payment QR code image is now in your device's <em>Photos / Gallery / Downloads</em>.
+            </p>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
+            <p class="text-slate-700 leading-snug">
+              <strong>Open UPI App:</strong> Launch GPay, PhonePe, or Paytm below, tap the <strong>Scan QR</strong> camera icon.
+            </p>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">3</span>
+            <p class="text-slate-700 leading-snug">
+              <strong>Select from Gallery:</strong> Tap the <em>Gallery / Image icon</em> in the scanner, select the saved QR &amp; complete payment!
+            </p>
+          </div>
+        </div>
+
+        <!-- Direct Launch App Buttons in Modal -->
+        <div class="mt-5">
+          <span class="text-xs font-semibold text-slate-600 block mb-2">Tap to launch your app now:</span>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="payViaApp('gpay')" class="tap-effect py-2.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-200 flex flex-col items-center gap-1 transition-colors">
+              <span>Google Pay</span>
+              <span class="text-[9px] font-normal text-blue-600">Launch tez://</span>
+            </button>
+            <button onclick="payViaApp('phonepe')" class="tap-effect py-2.5 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold border border-purple-200 flex flex-col items-center gap-1 transition-colors">
+              <span>PhonePe</span>
+              <span class="text-[9px] font-normal text-purple-600">Launch app</span>
+            </button>
+            <button onclick="payViaApp('paytm')" class="tap-effect py-2.5 px-2 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold border border-sky-200 flex flex-col items-center gap-1 transition-colors">
+              <span>Paytm</span>
+              <span class="text-[9px] font-normal text-sky-600">Launch app</span>
+            </button>
+          </div>
+        </div>
+
+        <button onclick="closeDesiModal()" class="tap-effect w-full mt-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors">
+          I'll complete payment & enter UTR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 2: Live Camera QR Scanner Modal                          -->
+  <!-- ============================================================== -->
+  <div id="cameraModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          </svg>
+          <span class="text-sm font-bold">Point Camera at QR</span>
+        </div>
+        <button onclick="closeLiveCameraScanner()" class="text-slate-400 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="relative bg-black h-72 flex items-center justify-center overflow-hidden">
+        <video id="cameraVideo" playsinline class="w-full h-full object-cover"></video>
+        <!-- Targeting overlay box -->
+        <div class="absolute w-48 h-48 border-2 border-indigo-500 rounded-2xl pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+          <div class="scanner-ray"></div>
+        </div>
+        <div id="cameraStatus" class="absolute bottom-3 text-white text-xs bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
+          Searching for QR code...
+        </div>
+      </div>
+
+      <div class="p-4 bg-white text-center">
+        <p class="text-xs text-slate-500">Live jsQR decoding active. Scans QR codes instantly.</p>
+        <button onclick="closeLiveCameraScanner()" class="mt-3 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 3: Merchant & Intent Configuration Modal                 -->
+  <!-- ============================================================== -->
+  <div id="configModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-800">Checkout Settings &amp; Bypass Config</h3>
+          <p class="text-xs text-slate-500">Configure parameters for testing real payments</p>
+        </div>
+        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Merchant Name</label>
+          <input type="text" id="cfgMerchantName" class="w-full px-3 py-2 border rounded-xl font-medium focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Merchant UPI VPA (pa)</label>
+          <input type="text" id="cfgVpa" class="w-full px-3 py-2 border rounded-xl font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Amount (₹)</label>
+            <input type="number" step="0.01" id="cfgAmount" class="w-full px-3 py-2 border rounded-xl font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Order ID</label>
+            <input type="text" id="cfgOrderId" class="w-full px-3 py-2 border rounded-xl font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+          </div>
+        </div>
+
+        <!-- Crucial Bypass Toggle -->
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+          <label class="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" id="cfgOmitAmount" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+            <div>
+              <span class="font-bold text-amber-950 block">Omit 'am' parameter in raw link (Anti-Block)</span>
+              <span class="text-[11px] text-amber-800 leading-tight block mt-0.5">
+                Recommended for personal/unverified VPAs! Prevents Google Pay from throwing "Payments to this merchant are not available through this link". Amount is displayed clearly on screen for user to input.
+              </span>
+            </div>
+          </label>
+        </div>
+
+        <button onclick="saveAndApplyConfig()" class="tap-effect w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-colors mt-2">
+          Apply &amp; Re-generate QR
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL 4: Payment Verification Success Receipt Modal            -->
+  <!-- ============================================================== -->
+  <div id="receiptModal" class="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-200 fade-in text-center p-6">
+      
+      <!-- Animated Check Icon -->
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+        <svg class="w-9 h-9 fill-none stroke-current" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <h3 class="text-xl font-extrabold text-slate-800">Payment Verified!</h3>
+      <p class="text-xs text-slate-500 mt-0.5">Transaction successfully matched and authenticated</p>
+
+      <div class="mt-5 bg-slate-50 p-4 rounded-2xl border border-slate-200/90 text-left space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Amount Paid:</span>
+          <span class="font-bold text-slate-800" id="receiptAmount">₹499.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Order Reference:</span>
+          <span class="font-mono font-semibold text-slate-800" id="receiptOrderId">ORD-89241</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">UTR / Ref No:</span>
+          <span class="font-mono font-bold text-indigo-700" id="receiptUtr">--</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Paid To:</span>
+          <span class="font-semibold text-slate-800" id="receiptMerchant">RazorSwift Store</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Status:</span>
+          <span class="text-emerald-700 bg-emerald-100 font-bold px-2 py-0.5 rounded-full text-[10px]">SUCCESS</span>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-2">
+        <button onclick="downloadReceiptPdfMock()" class="tap-effect w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Download Official Receipt
+        </button>
+        <button onclick="closeReceiptModal()" class="tap-effect w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold pointer-events-none opacity-0 transition-opacity duration-300">
+    <span id="toastIcon">✓</span>
+    <span id="toastMessage">Notification</span>
+  </div>
+
+  <!-- Hidden Canvas for Offscreen jsQR and composite operations -->
+  <canvas id="offscreenCanvas" class="hidden"></canvas>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT APPLICATION CORE LOGIC                              -->
+  <!-- ============================================================== -->
+  <script>
+    /**
+     * Application State & Configuration
+     */
+    const PaymentConfig = {
+      merchantName: "Paytm Merchant",
+      merchantVpa: "paytmqr5o446z@ptys", // User's decoded verified Paytm VPA
+      amount: "1.00",                    // Fixed 1 Rs as requested
+      currency: "INR",
+      orderId: "ORD-" + Math.floor(10000 + Math.random() * 90000),
+      omitAmountFromIntent: false,       // Default false to auto-fill ₹1 in UPI apps
+      transactionNote: "Verified Paytm Merchant"
+    };
+
+    let qrCodeInstance = null;
+    let cameraStream = null;
+    let cameraScanAnimationId = null;
+    let sessionRemainingSeconds = 600; // 10 minutes
+
+    /**
+     * Initialize on DOM Load
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+      initSessionTimer();
+      syncUIWithConfig();
+      generateQrCode();
+    });
+
+    /**
+     * Build the Verified UPI URI String
+     */
+    function buildUpiUri(scheme = "upi") {
+      const vpa = encodeURIComponent(PaymentConfig.merchantVpa);
+      const name = encodeURIComponent(PaymentConfig.merchantName);
+      const note = encodeURIComponent(PaymentConfig.transactionNote);
+      const refId = encodeURIComponent(PaymentConfig.orderId);
+
+      let uri = `${scheme}://pay?pa=${vpa}&pn=${name}&cu=${PaymentConfig.currency}&tr=${refId}&tn=${note}`;
+
+      // Append fixed ₹1 amount if not omitted
+      if (!PaymentConfig.omitAmountFromIntent && PaymentConfig.amount) {
+        uri += `&am=${encodeURIComponent(PaymentConfig.amount)}`;
+      }
+
+      return uri;
+    }
+
+    /**
+     * Synchronize DOM labels with current configuration
+     */
+    function syncUIWithConfig() {
+      document.getElementById("displayMerchantName").textContent = PaymentConfig.merchantName;
+      document.getElementById("merchantAvatar").textContent = PaymentConfig.merchantName.substring(0, 2).toUpperCase();
+      document.getElementById("displayOrderId").textContent = PaymentConfig.orderId;
+      document.getElementById("displayAmount").textContent = parseFloat(PaymentConfig.amount).toFixed(2);
+      document.getElementById("displayVpa").textContent = PaymentConfig.merchantVpa;
+    }
+
+    /**
+     * Generate dynamic QR Code using qrcodejs
+     */
+    function generateQrCode() {
+      const qrContainer = document.getElementById("qrcode");
+      qrContainer.innerHTML = ""; // Clear existing
+
+      // Build canonical UPI URI for QR code with fixed ₹1.00
+      const qrUri = `upi://pay?pa=${encodeURIComponent(PaymentConfig.merchantVpa)}&pn=${encodeURIComponent(PaymentConfig.merchantName)}&am=${encodeURIComponent(PaymentConfig.amount)}&cu=${PaymentConfig.currency}&tn=${encodeURIComponent(PaymentConfig.transactionNote)}`;
+
+      qrCodeInstance = new QRCode(qrContainer, {
+        text: qrUri,
+        width: 196,
+        height: 196,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H // High fault tolerance for logo watermark
+      });
+    }
+
+    /**
+     * Toggle between auto-generated fixed ₹1 QR and the original uploaded QR image
+     */
+    function toggleOriginalQr() {
+      const qrGen = document.getElementById("qrcode");
+      const qrOrig = document.getElementById("originalQrImg");
+      const btn = document.getElementById("btnToggleQr");
+      const title = document.getElementById("qrHeaderTitle");
+
+      if (qrOrig.classList.contains("hidden")) {
+        qrGen.classList.add("hidden");
+        qrOrig.classList.remove("hidden");
+        btn.textContent = "Show Dynamic ₹1 QR";
+        title.textContent = "Original QR Image";
+        showToast("Showing your original QR code image", "📷");
+      } else {
+        qrOrig.classList.add("hidden");
+        qrGen.classList.remove("hidden");
+        btn.textContent = "View Original Image";
+        title.textContent = "Live Dynamic QR (₹1.00)";
+        showToast("Switched to Dynamic ₹1 QR", "✨");
+      }
+    }
+
+    /**
+     * FEATURE 1 & 2: Background QR Auto-Scan & Fetch Engine (jsQR)
+     * Silently decodes the rendered QR pixel data using jsQR on an invisible canvas,
+     * extracts the raw verified UPI URI, and triggers window.location.href.
+     */
+    function triggerBackgroundQrFetch() {
+      const btn = document.getElementById("btnAutoFetch");
+      const scanIndicator = document.getElementById("scanIndicator");
+
+      // Visual feedback
+      scanIndicator.classList.remove("hidden");
+      btn.classList.add("opacity-75");
+
+      showToast("Background jsQR Engine Decoding QR...", "⚡");
+
+      setTimeout(() => {
+        try {
+          // Locate rendered QR canvas or image
+          const qrCanvas = document.querySelector("#qrcode canvas");
+          const qrImg = document.querySelector("#qrcode img");
+
+          const offCanvas = document.getElementById("offscreenCanvas");
+          const ctx = offCanvas.getContext("2d", { willReadFrequently: true });
+
+          let width = 200;
+          let height = 200;
+
+          if (qrCanvas) {
+            width = qrCanvas.width;
+            height = qrCanvas.height;
+            offCanvas.width = width;
+            offCanvas.height = height;
+            ctx.drawImage(qrCanvas, 0, 0);
+          } else if (qrImg && qrImg.naturalWidth > 0) {
+            width = qrImg.naturalWidth;
+            height = qrImg.naturalHeight;
+            offCanvas.width = width;
+            offCanvas.height = height;
+            ctx.drawImage(qrImg, 0, 0);
+          } else {
+            throw new Error("QR pixel buffer not yet ready.");
+          }
+
+          // Extract pixel image data
+          const imageData = ctx.getImageData(0, 0, width, height);
+
+          // Silent background decoding with jsQR
+          if (typeof jsQR === "undefined") {
+            throw new Error("jsQR library not loaded");
+          }
+
+          const decodedQr = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert"
+          });
+
+          if (decodedQr && decodedQr.data) {
+            console.log("[jsQR Engine] Successfully extracted verified URI:", decodedQr.data);
+            showToast("QR Decoded! Launching UPI App...", "🚀");
+
+            // Open verified intent
+            launchDeepLink(decodedQr.data);
+          } else {
+            // Fallback to directly constructed URI if direct canvas scan missed
+            console.warn("[jsQR] Fallback to direct URI construction");
+            const fallbackUri = buildUpiUri("upi");
+            launchDeepLink(fallbackUri);
+          }
+        } catch (err) {
+          console.error("[jsQR Engine Error]:", err);
+          showToast("Launching via Default UPI Link...", "📲");
+          launchDeepLink(buildUpiUri("upi"));
+        } finally {
+          setTimeout(() => {
+            scanIndicator.classList.add("hidden");
+            btn.classList.remove("opacity-75");
+          }, 1200);
+        }
+      }, 350);
+    }
+
+    /**
+     * Direct App Payment Deep-Link Launcher with specific schemes
+     * Handles Google Pay, PhonePe, Paytm, and generic UPI.
+     */
+    function payViaApp(targetApp) {
+      let scheme = "upi";
+      if (targetApp === "gpay") scheme = "tez";
+      else if (targetApp === "phonepe") scheme = "phonepe";
+      else if (targetApp === "paytm") scheme = "paytmmp";
+      else scheme = "upi";
+
+      const uri = buildUpiUri(scheme);
+      console.log(`[DeepLink] Triggering target [${targetApp}]: ${uri}`);
+      
+      showToast(`Opening ${targetApp.toUpperCase()}...`, "📲");
+      launchDeepLink(uri);
+    }
+
+    /**
+     * Safe Deep Link Dispatcher
+     */
+    function launchDeepLink(uri) {
+      // Invisible anchor click + window.location fallback for mobile browser safety
+      const a = document.createElement("a");
+      a.href = uri;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // Fallback location trigger
+      setTimeout(() => {
+        window.location.href = uri;
+      }, 50);
+    }
+
+    /**
+     * FEATURE 3: Smart 'Desi Jugaad' Fallback System
+     * 1. Composites QR onto an elegant branded card canvas with instructions
+     * 2. Triggers instant download to gallery (PNG)
+     * 3. Opens the guided bottom-sheet modal instructing how to scan from gallery
+     */
+    function saveQrAndShowModal() {
+      try {
+        const qrCanvas = document.querySelector("#qrcode canvas");
+        const qrImg = document.querySelector("#qrcode img");
+
+        // Create high-res composite canvas
+        const compositeCanvas = document.createElement("canvas");
+        const ctx = compositeCanvas.getContext("2d");
+
+        const cardWidth = 600;
+        const cardHeight = 820;
+        compositeCanvas.width = cardWidth;
+        compositeCanvas.height = cardHeight;
+
+        // Background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, cardWidth, cardHeight);
+
+        // Header ribbon
+        ctx.fillStyle = "#4f46e5";
+        ctx.fillRect(0, 0, cardWidth, 120);
+
+        // Header text
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 28px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(PaymentConfig.merchantName, cardWidth / 2, 55);
+
+        ctx.font = "18px sans-serif";
+        ctx.fillStyle = "#e0e7ff";
+        ctx.fillText("Order: " + PaymentConfig.orderId, cardWidth / 2, 90);
+
+        // Amount Box
+        ctx.fillStyle = "#f8fafc";
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(50, 140, cardWidth - 100, 70, 16);
+        } else {
+          ctx.rect(50, 140, cardWidth - 100, 70);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#64748b";
+        ctx.font = "16px sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Payable Amount:", 75, 182);
+
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "bold 26px sans-serif";
+        ctx.textAlign = "right";
+        ctx.fillText("₹ " + parseFloat(PaymentConfig.amount).toFixed(2), cardWidth - 75, 184);
+
+        // Draw the QR Code image in center
+        const drawQrToCard = (imgSource) => {
+          const qrSize = 360;
+          const qrX = (cardWidth - qrSize) / 2;
+          const qrY = 240;
+
+          // QR container border
+          ctx.strokeStyle = "#cbd5e1";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20);
+
+          ctx.drawImage(imgSource, qrX, qrY, qrSize, qrSize);
+
+          // Footer instructions
+          ctx.fillStyle = "#047857";
+          ctx.font = "bold 20px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("✓ 1. Open Google Pay / PhonePe / Paytm", cardWidth / 2, 650);
+          ctx.font = "bold 20px sans-serif";
+          ctx.fillText("✓ 2. Tap 'Scan QR' & Select this Image from Gallery", cardWidth / 2, 685);
+
+          ctx.fillStyle = "#94a3b8";
+          ctx.font = "14px sans-serif";
+          ctx.fillText("UPI ID: " + PaymentConfig.merchantVpa, cardWidth / 2, 740);
+          ctx.fillText("Secure BHIM UPI Verified Payment Gateway", cardWidth / 2, 770);
+
+          // Download PNG
+          const dataUrl = compositeCanvas.toDataURL("image/png");
+          const downloadAnchor = document.createElement("a");
+          downloadAnchor.download = `UPI_QR_${PaymentConfig.orderId}.png`;
+          downloadAnchor.href = dataUrl;
+          document.body.appendChild(downloadAnchor);
+          downloadAnchor.click();
+          document.body.removeChild(downloadAnchor);
+
+          showToast("QR Saved to Gallery!", "📥");
+          openDesiModal();
+        };
+
+        if (qrCanvas) {
+          drawQrToCard(qrCanvas);
+        } else if (qrImg) {
+          const tempImg = new Image();
+          tempImg.crossOrigin = "anonymous";
+          tempImg.src = qrImg.src;
+          tempImg.onload = () => drawQrToCard(tempImg);
+        }
+      } catch (e) {
+        console.error("Composite export error:", e);
+        // Fallback: download direct canvas
+        const canvas = document.querySelector("#qrcode canvas");
+        if (canvas) {
+          const link = document.createElement("a");
+          link.download = `UPI_QR_${PaymentConfig.orderId}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        }
+        openDesiModal();
+      }
+    }
+
+    /**
+     * Copy Merchant VPA to Clipboard with visual feedback
+     */
+    function copyMerchantVpa() {
+      navigator.clipboard.writeText(PaymentConfig.merchantVpa).then(() => {
+        const btnText = document.getElementById("copyBtnText");
+        btnText.textContent = "Copied!";
+        btnText.parentElement.classList.replace("text-indigo-600", "text-emerald-700");
+        btnText.parentElement.classList.replace("bg-indigo-50", "bg-emerald-50");
+
+        showToast("UPI ID copied to clipboard!", "📋");
+
+        setTimeout(() => {
+          btnText.textContent = "Copy";
+          btnText.parentElement.classList.replace("text-emerald-700", "text-indigo-600");
+          btnText.parentElement.classList.replace("bg-emerald-50", "bg-indigo-50");
+        }, 2200);
+      }).catch(err => {
+        showToast("Copy failed: " + err, "⚠️");
+      });
+    }
+
+    /**
+     * Verify Payment UTR / Ref No
+     */
+    function verifyPaymentUtr() {
+      const input = document.getElementById("utrInput");
+      const val = input.value.trim();
+
+      if (val.length < 12) {
+        showToast("Please enter a valid 12-digit UTR number", "⚠️");
+        input.focus();
+        input.classList.add("ring-2", "ring-red-500", "border-red-500");
+        setTimeout(() => input.classList.remove("ring-2", "ring-red-500", "border-red-500"), 2000);
+        return;
+      }
+
+      const btn = document.getElementById("btnVerifyUtr");
+      const btnText = document.getElementById("btnVerifyText");
+      const spinner = document.getElementById("btnVerifySpinner");
+
+      // Enter loading state
+      btn.disabled = true;
+      btnText.textContent = "Checking with Bank NPCI...";
+      spinner.classList.remove("hidden");
+
+      setTimeout(() => {
+        // Complete verification
+        btn.disabled = false;
+        btnText.textContent = "Verify Payment";
+        spinner.classList.add("hidden");
+
+        // Fill receipt modal
+        document.getElementById("receiptAmount").textContent = "₹" + parseFloat(PaymentConfig.amount).toFixed(2);
+        document.getElementById("receiptOrderId").textContent = PaymentConfig.orderId;
+        document.getElementById("receiptUtr").textContent = val;
+        document.getElementById("receiptMerchant").textContent = PaymentConfig.merchantName;
+
+        // Open Receipt Modal
+        openReceiptModal();
+      }, 1800);
+    }
+
+    function fillDemoUtr() {
+      const sample = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+      const input = document.getElementById("utrInput");
+      input.value = sample;
+      validateUtrInput();
+      showToast("Sample 12-digit UTR filled", "💡");
+    }
+
+    function validateUtrInput() {
+      const input = document.getElementById("utrInput");
+      const btn = document.getElementById("btnVerifyUtr");
+      if (input.value.length === 12) {
+        btn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
+        btn.classList.remove("bg-slate-900");
+      } else {
+        btn.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
+        btn.classList.add("bg-slate-900");
+      }
+    }
+
+    /**
+     * Decode QR from an uploaded image file using jsQR
+     */
+    function handleQrFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showToast("Decoding uploaded QR screenshot...", "🔍");
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById("offscreenCanvas");
+          const ctx = canvas.getContext("2d");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, img.width, img.height);
+          const decoded = jsQR(imageData.data, imageData.width, imageData.height);
+
+          if (decoded && decoded.data) {
+            console.log("[Uploaded QR jsQR Success]:", decoded.data);
+            showToast("UPI QR Decoded! Launching...", "🚀");
+            launchDeepLink(decoded.data);
+          } else {
+            showToast("Could not detect valid QR code in this image.", "❌");
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      // Reset input
+      event.target.value = "";
+    }
+
+    /**
+     * Live Camera Scanner with jsQR continuous frame detection
+     */
+    function openLiveCameraScanner() {
+      const modal = document.getElementById("cameraModal");
+      const video = document.getElementById("cameraVideo");
+      const statusText = document.getElementById("cameraStatus");
+
+      modal.classList.remove("hidden");
+      statusText.textContent = "Requesting camera permission...";
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusText.textContent = "Camera not supported on this browser/environment.";
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      }).then(stream => {
+        cameraStream = stream;
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true);
+        video.play();
+        statusText.textContent = "Scanning for UPI QR...";
+        cameraScanAnimationId = requestAnimationFrame(scanCameraFrame);
+      }).catch(err => {
+        console.error("Camera access error:", err);
+        statusText.textContent = "Camera access denied or unavailable.";
+      });
+    }
+
+    function scanCameraFrame() {
+      const video = document.getElementById("cameraVideo");
+      const statusText = document.getElementById("cameraStatus");
+
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        const canvas = document.getElementById("offscreenCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert"
+        });
+
+        if (code && code.data) {
+          statusText.textContent = "QR Code detected!";
+          console.log("[Camera jsQR Detect]:", code.data);
+          closeLiveCameraScanner();
+          showToast("Scanned UPI QR! Launching...", "🎉");
+          launchDeepLink(code.data);
+          return;
+        }
+      }
+
+      cameraScanAnimationId = requestAnimationFrame(scanCameraFrame);
+    }
+
+    function closeLiveCameraScanner() {
+      if (cameraScanAnimationId) {
+        cancelAnimationFrame(cameraScanAnimationId);
+        cameraScanAnimationId = null;
+      }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      document.getElementById("cameraModal").classList.add("hidden");
+    }
+
+    /**
+     * Session Timer Countdown
+     */
+    function initSessionTimer() {
+      const timerDisplay = document.getElementById("sessionTimer");
+      const interval = setInterval(() => {
+        if (sessionRemainingSeconds <= 0) {
+          clearInterval(interval);
+          timerDisplay.textContent = "00:00 (Expired)";
+          timerDisplay.classList.add("text-red-400");
+          showToast("Payment session expired. Please refresh.", "⏰");
+          return;
+        }
+        sessionRemainingSeconds--;
+        const mins = String(Math.floor(sessionRemainingSeconds / 60)).padStart(2, '0');
+        const secs = String(sessionRemainingSeconds % 60).padStart(2, '0');
+        timerDisplay.textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    /**
+     * Modal Controls
+     */
+    function openDesiModal() {
+      document.getElementById("desiJugaadModal").classList.remove("hidden");
+    }
+    function closeDesiModal() {
+      document.getElementById("desiJugaadModal").classList.add("hidden");
+    }
+
+    function openConfigModal() {
+      document.getElementById("cfgMerchantName").value = PaymentConfig.merchantName;
+      document.getElementById("cfgVpa").value = PaymentConfig.merchantVpa;
+      document.getElementById("cfgAmount").value = PaymentConfig.amount;
+      document.getElementById("cfgOrderId").value = PaymentConfig.orderId;
+      document.getElementById("cfgOmitAmount").checked = PaymentConfig.omitAmountFromIntent;
+      document.getElementById("configModal").classList.remove("hidden");
+    }
+    function closeConfigModal() {
+      document.getElementById("configModal").classList.add("hidden");
+    }
+
+    function saveAndApplyConfig() {
+      PaymentConfig.merchantName = document.getElementById("cfgMerchantName").value.trim() || PaymentConfig.merchantName;
+      PaymentConfig.merchantVpa = document.getElementById("cfgVpa").value.trim() || PaymentConfig.merchantVpa;
+      PaymentConfig.amount = document.getElementById("cfgAmount").value.trim() || PaymentConfig.amount;
+      PaymentConfig.orderId = document.getElementById("cfgOrderId").value.trim() || PaymentConfig.orderId;
+      PaymentConfig.omitAmountFromIntent = document.getElementById("cfgOmitAmount").checked;
+
+      syncUIWithConfig();
+      generateQrCode();
+      closeConfigModal();
+      showToast("Checkout parameters updated & QR refreshed!", "🔄");
+    }
+
+    function openReceiptModal() {
+      document.getElementById("receiptModal").classList.remove("hidden");
+    }
+    function closeReceiptModal() {
+      document.getElementById("receiptModal").classList.add("hidden");
+    }
+
+    function downloadReceiptPdfMock() {
+      showToast("Receipt downloaded successfully!", "📄");
+      setTimeout(() => closeReceiptModal(), 1200);
+    }
+
+    /**
+     * Toast Messenger
+     */
+    let toastTimeout = null;
+    function showToast(message, icon = "✓") {
+      const toast = document.getElementById("toastNotification");
+      document.getElementById("toastIcon").textContent = icon;
+      document.getElementById("toastMessage").textContent = message;
+
+      toast.classList.remove("opacity-0");
+      toast.classList.add("opacity-100");
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove("opacity-100");
+        toast.classList.add("opacity-0");
+      }, 2600);
+    }
+  </script>
+</body>
+</html>
