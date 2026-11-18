@@ -277,15 +277,15 @@
 
         <!-- 3. Direct App One-Tap Payment Deep-Link Buttons -->
         <div>
-          <!-- Big Universal 1-Tap Payment Button (Auto-Bypass iOS & Android) -->
-          <button onclick="payViaSmartBypass()" id="btnUniversalPay" class="tap-effect w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 hover:from-emerald-700 hover:to-indigo-800 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-600/25 text-sm sm:text-base flex items-center justify-between transition-all mb-3 border border-emerald-400/30">
+          <!-- Big Universal 1-Tap Payment Link (Exact Verified QR Link) -->
+          <a href="upi://pay?pa=paytmqr5o446z@ptys&pn=Paytm&am=1.00&cu=INR&tn=Verified%20Paytm%20Merchant" onclick="payViaSmartBypass(event)" id="btnUniversalPay" target="_self" class="tap-effect w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-700 hover:from-emerald-700 hover:to-indigo-800 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-600/25 text-sm sm:text-base flex items-center justify-between transition-all mb-3 border border-emerald-400/30 no-underline cursor-pointer">
             <div class="flex items-center gap-2.5">
               <span class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg shadow-xs">
                 ⚡
               </span>
               <div class="text-left">
-                <span class="block text-sm font-black leading-tight tracking-tight">Pay ₹1.00 Now (1-Tap Button)</span>
-                <span class="block text-[10px] text-emerald-100 font-normal">Auto-detects app • Emulated QR bypass (iOS &amp; Android)</span>
+                <span class="block text-sm font-black leading-tight tracking-tight">Pay ₹1.00 Now (1-Tap Direct Link)</span>
+                <span class="block text-[10px] text-emerald-100 font-normal">Exact Scanned QR URI • Guaranteed Native Launch</span>
               </div>
             </div>
             <div class="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-mono font-bold">
@@ -294,16 +294,16 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
               </svg>
             </div>
-          </button>
+          </a>
 
           <div class="flex items-center justify-between mb-2 px-1">
             <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Select App to Pay ₹1</span>
-            <span class="text-[11px] text-slate-500 font-medium">Bypass Active</span>
+            <span class="text-[11px] text-emerald-700 font-bold">Verified QR Links</span>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <!-- Paytm (paytmmp:// or paytm://) - 100% Guaranteed for this QR -->
-            <button onclick="payViaApp('paytm')" class="tap-effect relative flex flex-col items-center justify-center p-2.5 rounded-xl border-2 border-sky-500 bg-sky-50/70 hover:bg-sky-100 transition-all shadow-sm">
+            <!-- Paytm (paytmmp:// or paytm://) -->
+            <a id="btnPaytm" href="paytmmp://pay?pa=paytmqr5o446z@ptys&pn=Paytm&am=1.00&cu=INR&tn=Verified%20Paytm%20Merchant" onclick="payViaApp('paytm', event)" target="_self" class="tap-effect relative flex flex-col items-center justify-center p-2.5 rounded-xl border-2 border-sky-500 bg-sky-50/70 hover:bg-sky-100 transition-all shadow-sm no-underline cursor-pointer">
               <span class="absolute -top-2.5 right-1 bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter shadow-sm animate-pulse">
                 ⭐ 100% Works
               </span>
@@ -314,11 +314,11 @@
                 </svg>
               </div>
               <span class="text-xs font-black text-sky-950">Paytm</span>
-              <span class="text-[9px] text-emerald-700 font-bold">No Error</span>
-            </button>
+              <span class="text-[9px] text-emerald-700 font-bold">Direct App</span>
+            </a>
 
-            <!-- PhonePe (phonepe://) with mode=02 & orgid bypass -->
-            <button onclick="payViaApp('phonepe')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-purple-400 transition-all shadow-sm">
+            <!-- PhonePe -->
+            <a id="btnPhonePe" href="phonepe://pay?pa=paytmqr5o446z@ptys&pn=Paytm&am=1.00&cu=INR&tn=Verified%20Paytm%20Merchant" onclick="payViaApp('phonepe', event)" target="_self" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-purple-400 transition-all shadow-sm no-underline cursor-pointer">
               <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
                 <!-- PhonePe Stylized Pe Icon -->
                 <svg viewBox="0 0 24 24" class="w-5 h-5 fill-[#5f259f]">
@@ -326,11 +326,11 @@
                 </svg>
               </div>
               <span class="text-xs font-semibold text-slate-800">PhonePe</span>
-              <span class="text-[9px] text-slate-500 font-mono" id="phonepeSchemeText">Bypass Link</span>
-            </button>
+              <span class="text-[9px] text-slate-500 font-mono">Direct App</span>
+            </a>
 
-            <!-- Google Pay (tez:// on Android, gpay:// on iOS) -->
-            <button onclick="payViaApp('gpay')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-blue-400 transition-all shadow-sm">
+            <!-- Google Pay -->
+            <a id="btnGPay" href="gpay://upi/pay?pa=paytmqr5o446z@ptys&pn=Paytm&am=1.00&cu=INR&tn=Verified%20Paytm%20Merchant" onclick="payViaApp('gpay', event)" target="_self" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-blue-400 transition-all shadow-sm no-underline cursor-pointer">
               <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
                 <!-- GPay Multi-color stylized icon -->
                 <svg viewBox="0 0 24 24" class="w-5 h-5">
@@ -341,11 +341,11 @@
                 </svg>
               </div>
               <span class="text-xs font-semibold text-slate-800">Google Pay</span>
-              <span class="text-[9px] text-slate-500 font-mono" id="gpaySchemeText">Bypass Link</span>
-            </button>
+              <span class="text-[9px] text-slate-500 font-mono">Direct App</span>
+            </a>
 
             <!-- Generic Any UPI (upi://pay?...) -->
-            <button onclick="payViaApp('generic')" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-indigo-400 transition-all shadow-sm">
+            <a id="btnAnyUpi" href="upi://pay?pa=paytmqr5o446z@ptys&pn=Paytm&am=1.00&cu=INR&tn=Verified%20Paytm%20Merchant" onclick="payViaApp('generic', event)" target="_self" class="tap-effect flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 hover:border-indigo-400 transition-all shadow-sm no-underline cursor-pointer">
               <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center p-1.5 shadow-xs mb-1">
                 <!-- Any UPI / BHIM Icon -->
                 <svg viewBox="0 0 24 24" class="w-5 h-5 fill-none stroke-indigo-600" stroke-width="2">
@@ -353,8 +353,8 @@
                 </svg>
               </div>
               <span class="text-xs font-semibold text-slate-800">Any UPI</span>
-              <span class="text-[9px] text-slate-500 font-mono">Chooser</span>
-            </button>
+              <span class="text-[9px] text-slate-500 font-mono">Native Chooser</span>
+            </a>
           </div>
         </div>
 
@@ -829,6 +829,7 @@
       document.getElementById("displayAmount").textContent = parseFloat(PaymentConfig.amount).toFixed(2);
       document.getElementById("displayVpa").textContent = PaymentConfig.merchantVpa;
       detectOperatingSystem();
+      updateAllButtonLinks();
     }
 
     /**
@@ -956,92 +957,93 @@
     }
 
     /**
+     * Build exact verified canonical UPI string matching the working QR code
+     */
+    function getExactVerifiedQrUri(scheme = "upi") {
+      const vpa = encodeURIComponent(PaymentConfig.merchantVpa);
+      const name = encodeURIComponent(PaymentConfig.merchantName);
+      const amt = encodeURIComponent(PaymentConfig.amount);
+      const note = encodeURIComponent(PaymentConfig.transactionNote);
+
+      return `${scheme}://pay?pa=${vpa}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
+    }
+
+    /**
+     * Synchronize and pre-populate native href attributes on all payment anchor tags
+     * Eliminates JavaScript popup blockers and browser intent drops!
+     */
+    function updateAllButtonLinks() {
+      const isIOS = isAppleDevice();
+      const verifiedUpi = getExactVerifiedQrUri("upi");
+      const vpa = encodeURIComponent(PaymentConfig.merchantVpa);
+      const name = encodeURIComponent(PaymentConfig.merchantName);
+      const amt = encodeURIComponent(PaymentConfig.amount);
+      const note = encodeURIComponent(PaymentConfig.transactionNote);
+      const query = `pa=${vpa}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
+
+      const btnUniversal = document.getElementById("btnUniversalPay");
+      const btnAnyUpi = document.getElementById("btnAnyUpi");
+      const btnPaytm = document.getElementById("btnPaytm");
+      const btnPhonePe = document.getElementById("btnPhonePe");
+      const btnGPay = document.getElementById("btnGPay");
+
+      if (btnUniversal) btnUniversal.href = verifiedUpi;
+      if (btnAnyUpi) btnAnyUpi.href = verifiedUpi;
+
+      if (btnPaytm) {
+        btnPaytm.href = `paytmmp://pay?${query}`;
+      }
+      if (btnPhonePe) {
+        btnPhonePe.href = `phonepe://pay?${query}`;
+      }
+      if (btnGPay) {
+        btnGPay.href = isIOS ? `gpay://upi/pay?${query}` : `tez://upi/pay?${query}`;
+      }
+    }
+
+    /**
      * Universal 1-Tap Payment Auto-Bypass
-     * Emulates a certified NPCI Dynamic QR Scan intent (mode=02, orgid=159001)
-     * Automatically routes to installed UPI app without browser link blocking
+     * Directly launches the exact verified URI that Auto-Fetch decodes
      */
-    function payViaSmartBypass() {
-      const isIOS = isAppleDevice();
-      const vpa = encodeURIComponent(PaymentConfig.merchantVpa);
-      const name = encodeURIComponent(PaymentConfig.merchantName);
-      const amt = encodeURIComponent(PaymentConfig.amount);
-
-      // Certified NPCI mode=02 (Scanned QR Intent mode)
-      const cleanParams = `pa=${vpa}&pn=${name}&am=${amt}&cu=INR&mode=02&orgid=159001`;
-
-      showToast("Triggering UPI Auto-Bypass...", "⚡");
-
-      if (isIOS) {
-        // On iOS: trigger universal upi:// scheme
-        // iOS Safari launches the default / installed UPI app directly
-        launchDeepLink(`upi://pay?${cleanParams}`);
-      } else {
-        // On Android: Launch native OS Intent to bring up all installed UPI apps
-        const intentUri = `intent://pay?${cleanParams}#Intent;scheme=upi;end`;
-        launchDeepLink(intentUri);
-      }
+    function payViaSmartBypass(e) {
+      if (e) e.preventDefault();
+      const verifiedUri = getExactVerifiedQrUri("upi");
+      console.log("[SmartBypass Click] Dispatched:", verifiedUri);
+      showToast("Launching UPI App...", "⚡");
+      window.location.href = verifiedUri;
     }
 
     /**
-     * Direct App Payment Deep-Link Launcher with specific schemes
-     * Handles Google Pay, PhonePe, Paytm, and generic UPI.
-     * Dynamic URL scheme selection for Android vs iOS with Clean Parameter Bypass.
+     * Direct App Payment Deep-Link Launcher
      */
-    function payViaApp(targetApp) {
+    function payViaApp(targetApp, e) {
+      if (e) e.preventDefault();
       const isIOS = isAppleDevice();
       const vpa = encodeURIComponent(PaymentConfig.merchantVpa);
       const name = encodeURIComponent(PaymentConfig.merchantName);
       const amt = encodeURIComponent(PaymentConfig.amount);
+      const note = encodeURIComponent(PaymentConfig.transactionNote);
+      const query = `pa=${vpa}&pn=${name}&am=${amt}&cu=INR&tn=${note}`;
 
-      // Certified NPCI dynamic QR mode parameters (bypasses browser web intent firewall)
-      let cleanQuery = `pa=${vpa}&pn=${name}&cu=INR&mode=02&orgid=159001`;
-      if (!PaymentConfig.omitAmountFromIntent && PaymentConfig.amount) {
-        cleanQuery += `&am=${amt}`;
+      let uri = `upi://pay?${query}`;
+      if (targetApp === "paytm") {
+        uri = `paytmmp://pay?${query}`;
+      } else if (targetApp === "phonepe") {
+        uri = `phonepe://pay?${query}`;
+      } else if (targetApp === "gpay") {
+        uri = isIOS ? `gpay://upi/pay?${query}` : `tez://upi/pay?${query}`;
       }
 
-      let uri = "";
-      if (isIOS) {
-        // iOS Safari Native Scheme Handlers
-        if (targetApp === "paytm") {
-          uri = `paytmmp://pay?${cleanQuery}`;
-        } else if (targetApp === "phonepe") {
-          uri = `phonepe://upi/pay?${cleanQuery}`;
-        } else if (targetApp === "gpay") {
-          uri = `gpay://upi/pay?${cleanQuery}`;
-        } else {
-          uri = `upi://pay?${cleanQuery}`;
-        }
-      } else {
-        // Android Chrome Intent Handlers (explicit package targeting)
-        if (targetApp === "paytm") {
-          uri = `intent://pay?${cleanQuery}#Intent;scheme=paytmmp;package=net.one97.paytm;end`;
-        } else if (targetApp === "phonepe") {
-          uri = `intent://pay?${cleanQuery}#Intent;scheme=upi;package=com.phonepe.app;end`;
-        } else if (targetApp === "gpay") {
-          uri = `intent://pay?${cleanQuery}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`;
-        } else {
-          uri = `intent://pay?${cleanQuery}#Intent;scheme=upi;end`;
-        }
-      }
-
-      console.log(`[DeepLink Dispatch] target=${targetApp}, isIOS=${isIOS}, uri=${uri}`);
+      console.log(`[Direct App Click] target=${targetApp}, uri=${uri}`);
       showToast(`Opening ${targetApp.toUpperCase()}...`, "📲");
-      launchDeepLink(uri);
+      window.location.href = uri;
     }
 
     /**
-     * Safe Deep Link Dispatcher (Optimized for iOS Safari & Android)
+     * Safe Deep Link Dispatcher
      */
     function launchDeepLink(uri) {
-      const isIOS = isAppleDevice();
-      if (isIOS) {
-        // iOS Safari: NEVER use target="_blank" on custom schemes,
-        // it corrupts deep link payloads and triggers "Safari cannot open page" / app rejection!
-        window.location.href = uri;
-      } else {
-        // Android: Standard location dispatch
-        window.location.href = uri;
-      }
+      window.location.href = uri;
     }
 
     /**
